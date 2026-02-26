@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>Goal Widget</title>
+<style>
+body {
+  font-family: sans-serif;
+  background: #f4f4f4;
+  padding: 20px;
+  direction: rtl;
+}
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 500px;
+  margin: auto;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+input, select, button {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+}
+.progress-bar {
+  background: #ddd;
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.progress-fill {
+  background: #4caf50;
+  height: 100%;
+  width: 0%;
+  transition: 0.4s;
+}
+.video-item {
+  background: #eee;
+  padding: 6px;
+  margin: 4px 0;
+  border-radius: 6px;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>🎯 هدف انتشار</h2>
+
+  <label>تعداد هدف</label>
+  <input type="number" id="target">
+
+  <label>سررسید</label>
+  <input type="date" id="deadline">
+
+  <hr>
+
+  <h3>➕ افزودن ویدیو</h3>
+  <input type="text" id="videoTitle" placeholder="عنوان ویدیو">
+  <input type="date" id="publishDate">
+  <select id="status">
+    <option value="draft">پیش‌نویس</option>
+    <option value="published">منتشر شده</option>
+  </select>
+  <button onclick="addVideo()">افزودن</button>
+
+  <hr>
+
+  <h3>📊 پیشرفت</h3>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <p id="progressText">0%</p>
+
+  <div id="videoList"></div>
+</div>
+
+<script>
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
+
+function save() {
+  localStorage.setItem("videos", JSON.stringify(videos));
+}
+
+function addVideo() {
+  const title = document.getElementById("videoTitle").value;
+  const publishDate = document.getElementById("publishDate").value;
+  const status = document.getElementById("status").value;
+
+  videos.push({ title, publishDate, status });
+  save();
+  render();
+}
+
+function render() {
+  const list = document.getElementById("videoList");
+  list.innerHTML = "";
+
+  videos.forEach(v => {
+    list.innerHTML += `<div class="video-item">${v.title} - ${v.status}</div>`;
+  });
+
+  calculateProgress();
+}
+
+function calculateProgress() {
+  const target = Number(document.getElementById("target").value);
+  const deadline = document.getElementById("deadline").value;
+
+  if (!target || !deadline) return;
+
+  const completed = videos.filter(v =>
+    v.status === "published" &&
+    new Date(v.publishDate) <= new Date(deadline)
+  ).length;
+
+  const percent = Math.min(100, Math.round((completed / target) * 100));
+
+  document.getElementById("progressFill").style.width = percent + "%";
+  document.getElementById("progressText").innerText =
+    percent + "% (" + completed + " از " + target + ")";
+}
+
+document.getElementById("target").addEventListener("input", calculateProgress);
+document.getElementById("deadline").addEventListener("input", calculateProgress);
+
+render();
+</script>
+
+</body>
+</html>
